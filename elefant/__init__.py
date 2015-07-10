@@ -35,11 +35,12 @@ class Elefant(object):
 	DateFormat         = '%Y_%m_%d-%H_%M_%S'
 	BackupFormat       = '%(app)s__%(date)s.dump'
 
-	def __init__(self, app, bucket, env=None, region=None):
-		self.env = env or {}
+	def __init__(self, app, bucket, prefix=None, env=None, region=None):
 		self.app = app
-		self.region = region or 'us-east-1'
 		self.bucket = bucket
+		self.prefix = prefix or '.'
+		self.env = env or {}
+		self.region = region or 'us-east-1'
 
 		# additional env variables
 		self.env.update({
@@ -67,7 +68,7 @@ class Elefant(object):
 	def download(self, backup_id):
 		print "Downloading %s..." % backup_id
 		cmd = Elefant.CommandDownload % (
-			Elefant.DumpPath, backup_id, self.app)
+			os.path.join(self.prefix, Elefant.DumpPath), backup_id, self.app)
 		self.run(cmd)
 
 	def connect(self):
@@ -83,10 +84,10 @@ class Elefant(object):
 
 	def save(self):
 		name = self.name()
-		print "Saving from %s to %s..." % (Elefant.DumpPath, name)
+		print "Saving from %s to %s..." % (os.path.join(self.prefix, Elefant.DumpPath), name)
 		s3, bucket = self.connect()
 		key = Key(bucket=bucket, name=name)
-		key.set_contents_from_filename(Elefant.DumpPath)
+		key.set_contents_from_filename(os.path.join(self.prefix, Elefant.DumpPath))
 
 	def delete(self, backup_id):
 		print "Deleting..."
@@ -97,7 +98,7 @@ class Elefant(object):
 		self.run(cmd)
 
 		# then delete locally
-		cmd = "rm %s" % Elefant.DumpPath
+		cmd = "rm %s" % os.path.join(self.prefix, Elefant.DumpPath)
 		self.run(cmd)
 
 	def name(self):
@@ -120,7 +121,7 @@ class Elefant(object):
 			backup_key = Key(bucket=bucket, name=backup_key)
 		
 		# download to disk
-		backup_key.get_contents_to_filename(Elefant.RestorePath)
+		backup_key.get_contents_to_filename(os.path.join(self.prefix, Elefant.RestorePath))
 
 		# get the credentials for heroku postgres
 		cmd = Elefant.CommandCredentials
@@ -135,7 +136,7 @@ class Elefant(object):
 				break
 
 		# apply the restore
-		credentials.update({'dump' : Elefant.RestorePath})
+		credentials.update({'dump' : os.path.join(self.prefix, Elefant.RestorePath)})
 		cmd = Elefant.CommandRestore % credentials
 		try:
 			print self.run(cmd)
@@ -145,7 +146,7 @@ class Elefant(object):
 			print "PROCESS ERROR CAUGHT:", e
 
 		# delete the local restore file
-		print self.run("rm %s" % Elefant.RestorePath)
+		print self.run("rm %s" % os.path.join(self.prefix, Elefant.RestorePath))
 
 	def extract_postgres_url(self, url):
 		"""

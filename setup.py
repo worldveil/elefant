@@ -10,7 +10,7 @@ def read(fname):
 
 setup(
     name = "Elefant",
-    version = "0.0.5",
+    version = "0.0.6",
     author = "Will Drevo",
     author_email = "will.drevo@gmail.com",
     description = ("Backing up and restoring Postgres databases "

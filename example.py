@@ -1,7 +1,7 @@
 from elefant import Elefant
 
 # create Elefant object, passing in the Heroku app name and backups bucket
-eft = Elefant("myapp", "mybucket")
+eft = Elefant("myapp", "mybucket", prefix="/dev/sda1")
 
 print "Making backup, uploading to S3, and then deleting from Heroku..."
 eft.backup() 
