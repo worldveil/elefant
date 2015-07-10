@@ -1,10 +1,9 @@
 from elefant import Elefant
 
+# create Elefant object, passing in the Heroku app name and backups bucket
+hb = Elefant("myapp", "mybucket")
 
-# create Elefant object, passing in the Heroku app name
-hb = Elefant(app="myapp", bucket="mybucket")
-
-print "Making and backup and uploading to S3..."
+print "Making backup, uploading to S3, and then deleting from Heroku..."
 hb.backup() 
 
 print "Availiable backups:"
@@ -15,5 +14,5 @@ for b in backups:
 print "Restoring from most recent backup..."
 hb.restore(b) 
 
-print "Restoring from most recent backup using a string..."
+print "Restoring (this time using the name of the S3 filename key)..."
 hb.restore(b.name)
